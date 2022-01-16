@@ -1,0 +1,9 @@
+/node_modules
+.env
+/dist
+
+/server/tests
+
+/Requests
+
+/client/assets/images
