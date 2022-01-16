@@ -7,7 +7,9 @@ import {
   makeStyles,
   TextField,
   Typography,
+  Avatar,
 } from "@material-ui/core";
+import FileUpload from "@material-ui/icons/AddPhotoAlternate";
 import React, { useState, useEffect } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { auth } from "../auth/auth-helper";
@@ -19,9 +21,10 @@ const EditProfile = () => {
   const classes = useStyles();
   const [values, setValues] = useState({
     name: "",
+    about: "",
+    photo: "",
     password: "",
     email: "",
-    about: "",
     open: false,
     error: "",
     redirectToProfile: false,
@@ -39,6 +42,7 @@ const EditProfile = () => {
       } else {
         setValues({
           ...values,
+          id: data._id,
           name: data.name,
           email: data.email,
           about: data.about,
@@ -53,30 +57,43 @@ const EditProfile = () => {
   }, [params]);
 
   const clickSubmit = () => {
-    // const user = {name, email, password}
-    // update(userId, jwt.token, user)
-    // setVaues(userId=data._id, redirect=true)
-    // console.log("Edit user profile XD");
-    const user = {
-      name: values.name || undefined,
-      email: values.email || undefined,
-      password: values.password || undefined,
-      about: values.about || undefined,
-    };
+    // const user = {
+    // name: values.name || undefined,
+    // email: values.email || undefined,
+    // password: values.password || undefined,
+    // about: values.about || undefined,
+    // };
 
-    update({ userId: params.userId }, { t: jwt.token }, user).then((data) => {
-      if (data && data.error) {
-        setValues({ ...values, error: data.error });
-      } else {
-        // console.log(data._id);
-        setValues({ ...values, userId: data._id, redirectToProfile: true });
+    let userData = new FormData();
+    values.name && userData.append("name", values.name);
+    values.email && userData.append("email", values.email);
+    values.password && userData.append("password", values.password);
+    values.about && userData.append("about", values.about);
+    values.photo && userData.append("photo", values.photo);
+
+    update({ userId: params.userId }, { t: jwt.token }, userData).then(
+      (data) => {
+        if (data && data.error) {
+          setValues({ ...values, error: data.error });
+        } else {
+          // console.log(data._id);
+          setValues({ ...values, userId: data._id, redirectToProfile: true });
+        }
       }
-    });
+    );
   };
 
   const handleChange = (name) => (event) => {
-    setValues({ ...values, [name]: event.target.value });
+    const value =
+      name === "photo" ? event.target.files[0] : event.target.value;
+
+    setValues({ ...values, [name]: value });
   };
+
+  console.log(values.id);
+  const photoUrl = values.id
+    ? `/api/users/photo/${values.id}?${new Date().getTime()}`
+    : "/api/users/defaultPhoto"; // instead of default photo
 
   if (values.redirectToProfile) {
     return <Navigate to={`/user/${values.userId}`} />;
@@ -88,6 +105,27 @@ const EditProfile = () => {
         <Typography variant='h6' className={classes.title}>
           Edit Profile
         </Typography>
+        {/* Profile picture */}
+        <Avatar className={classes.bigAvatar} src={photoUrl} />
+        <br />
+        <input
+          accept='image/'
+          onChange={handleChange("photo")}
+          type='file'
+          id='icon-button-file'
+          className={classes.input}
+        />
+        <label htmlFor='icon-button-file'>
+          <Button variant='contained' color='default' component='span'>
+            Upload
+            <FileUpload />
+          </Button>
+        </label>
+        <span className={classes.filename}>
+          {values.photo ? values.photo.name : ""}
+        </span>
+        <br />
+        {/*  */}
         <TextField
           id='name'
           label='name'
@@ -96,6 +134,7 @@ const EditProfile = () => {
           onChange={handleChange("name")}
           margins='normal'
         />
+        <br />
         <br />
         <TextField
           id='multiline-flexible'
@@ -107,6 +146,8 @@ const EditProfile = () => {
           margins='normal'
           className={classes.textField}
         />
+        <br />
+        <br />
         <TextField
           id='email'
           label='email'
@@ -117,6 +158,7 @@ const EditProfile = () => {
           margins='normal'
         />
         <br />
+        <br />
         <TextField
           id='password'
           label='password'
@@ -126,6 +168,7 @@ const EditProfile = () => {
           onChange={handleChange("password")}
           margins='normal'
         />
+        <br />
         <br />
         {values.error && (
           <Typography
@@ -178,6 +221,17 @@ const useStyles = makeStyles((theme) => ({
   submit: {
     margin: "auto",
     marginBottom: theme.spacing(2),
+  },
+  input: {
+    display: "none",
+  },
+  bigAvatar: {
+    width: 60,
+    height: 60,
+    margin: "auto",
+  },
+  filename: {
+    marginLeft: "10px",
   },
 }));
 

@@ -47,6 +47,10 @@ const Profile = () => {
     };
   }, [params]);
 
+  const photoUrl = user._id
+    ? `/api/users/photo/${user._id}?${new Date().getTime}`
+    : "/api/users/defaultphoto";
+
   if (redirectToSignin) {
     return <Navigate to='/signin' replace={true} />;
   }
@@ -62,8 +66,8 @@ const Profile = () => {
       <List dense>
         <ListItem>
           <ListItemAvatar>
-            <Avatar>
-              <Person />
+            <Avatar src={photoUrl} className={classes.bigAvatar}>
+              {/* <Person /> */}
             </Avatar>
           </ListItemAvatar>
           <ListItemText primary={user.name} secondary={user.email} />
@@ -100,8 +104,15 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(5),
   }),
   title: {
-    marginTop: theme.spacing(3),
+    marginTop: theme.spacing(1),
     color: theme.palette.protectedTitle,
+    fontSize: "1.3em",
+  },
+  bigAvatar: {
+    width: 80,
+    height: 80,
+    margin: 10,
+    marginRight: 30,
   },
 }));
 

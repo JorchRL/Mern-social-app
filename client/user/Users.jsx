@@ -49,8 +49,8 @@ const Users = () => {
           <Link to={`/user/${item._id}`} key={i}>
             <ListItem button>
               <ListItemAvatar>
-                <Avatar>
-                  <Person />
+                <Avatar src={`/api/users/photo/${item._id}`}>
+                  {/* <Person /> */}
                 </Avatar>
               </ListItemAvatar>
               <ListItemText primary={item.name} />
