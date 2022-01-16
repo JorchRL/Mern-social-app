@@ -3,7 +3,7 @@ import errorHandler from "../helpers/dbErrorHandler";
 
 import extend from "lodash/extend";
 
-// api/user
+// POST api/users
 const create = async (req, res) => {
   // console.log(req.body);
   const user = new User(req.body);
@@ -20,6 +20,7 @@ const create = async (req, res) => {
   }
 };
 
+// GET api/users
 const list = async (req, res) => {
   try {
     const users = await User.find().select("name email updated created");
@@ -32,7 +33,7 @@ const list = async (req, res) => {
   }
 };
 
-// api/user/:userId
+// GET api/users/:userId
 const read = (req, res) => {
   // the userByID function has made req.profile available here...
   // But before returning it, lets hide the password hash and its salt,
@@ -43,24 +44,42 @@ const read = (req, res) => {
   return res.json(req.profile);
 };
 
+import formidable from "formidable";
+import fs from "fs";
+// PUT /api/users/:userId
 const update = async (req, res) => {
-  // console.log("Upate profile: ", req.profile);
-  // console.log("Request body: ", req.body);
-  try {
+  let form = new formidable.IncomingForm();
+  form.keepExtensions = true;
+  form.parse(req, async (err, fields, files) => {
+    if (err) {
+      return res.status(400).json({ error: "Photo could not be uploaded" });
+    }
+
     let user = req.profile;
     user = extend(user, req.body);
-
     user.updated = Date.now();
-    await user.save();
-    user.hashed_password = undefined;
-    user.salt = undefined;
-    res.status(201).json(user);
-  } catch (error) {
-    return res
-      .status(400)
-      .json({ error: errorHandler.getErrorMessage(error) });
-  }
+
+    if (files.photo) {
+      // console.log(files.photo);
+      // the path is in file.photo.filepath now
+      user.photo.data = fs.readFileSync(files.photo.filepath);
+      user.photo.contentType = files.photo.type;
+    }
+
+    try {
+      await user.save();
+      user.hashed_password = undefined;
+      user.salt = undefined;
+      res.status(201).json(user);
+    } catch (error) {
+      return res
+        .status(400)
+        .json({ error: errorHandler.getErrorMessage(error) });
+    }
+  });
 };
+
+// DELETE /api/users/:userId
 const remove = async (req, res, next) => {
   try {
     const user = req.profile;
@@ -92,6 +111,22 @@ const userByID = async (req, res, next, id) => {
   }
 };
 
+// GET /api/users/photo/:userId
+const photo = async (req, res, next) => {
+  // req.profile is available in this controller.
+  if (req.profile.photo.data) {
+    res.set("Content-Type", req.profile.photo.contentType);
+    return res.send(req.profile.photo.data);
+  }
+  next();
+};
+// GET /api/users/defaultphoto
+import profileImage from "./../../client/assets/images/profile-pic.png";
+const defaultPhoto = async (req, res, next) => {
+  // return res.sendFile(process.cwd() + profileImage);
+  return res.send("");
+};
+
 export default {
   list,
   create,
@@ -99,4 +134,6 @@ export default {
   update,
   remove,
   userByID,
+  photo,
+  defaultPhoto,
 };
