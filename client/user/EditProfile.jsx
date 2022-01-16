@@ -21,6 +21,7 @@ const EditProfile = () => {
     name: "",
     password: "",
     email: "",
+    about: "",
     open: false,
     error: "",
     redirectToProfile: false,
@@ -40,6 +41,7 @@ const EditProfile = () => {
           ...values,
           name: data.name,
           email: data.email,
+          about: data.about,
           error: "",
         });
       }
@@ -59,6 +61,7 @@ const EditProfile = () => {
       name: values.name || undefined,
       email: values.email || undefined,
       password: values.password || undefined,
+      about: values.about || undefined,
     };
 
     update({ userId: params.userId }, { t: jwt.token }, user).then((data) => {
@@ -94,6 +97,16 @@ const EditProfile = () => {
           margins='normal'
         />
         <br />
+        <TextField
+          id='multiline-flexible'
+          label='About'
+          multiline
+          rows='2'
+          value={values.about}
+          onChange={handleChange("about")}
+          margins='normal'
+          className={classes.textField}
+        />
         <TextField
           id='email'
           label='email'
